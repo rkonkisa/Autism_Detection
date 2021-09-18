@@ -1,0 +1,359 @@
+---
+title: "Autism Detection Using R"
+author: "Rajeshwar Reddy Konkisa"
+date: "18/Sept/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+```{r echo = T, results = 'hide'}
+library(plyr)
+library(readr)
+library(dplyr)
+library(caret)
+```
+
+
+**About this dataset**
+
+**What is Autism**
+
+Autism, or autism spectrum disorder (ASD), refers to a broad range of conditions characterized by challenges with social skills, repetitive behaviors, speech and nonverbal communication.
+
+**Causes and Challenges**
+It is mostly influenced by a combination of genetic and environmental factors. Because autism is a spectrum disorder, each person with autism has a distinct set of strengths and challenges. The ways in which people with autism learn, think and problem-solve can range from highly skilled to severely challenged.
+Research has made clear that high quality early intervention can improve learning, communication and social skills, as well as underlying brain development. Yet the diagnostic process can take several years.
+
+**The Role of Machine Learning**
+This dataset is composed of survey results for more than 700 people who filled an app form. There are labels portraying whether the person received a diagnosis of autism, allowing machine learning models to predict the likelihood of having autism, therefore allowing healthcare professionals prioritize their resources.
+
+```{r}
+data <- read.csv(file.choose())
+head(data)
+```
+**Lets now check the statistical aspects of our data.**
+
+```{r}
+summary(data)
+```
+**Lets now Check for any missing values in the dataset**
+```{r}
+sum(is.na(data))
+```
+This Data Set has no null values. So we need not perform any imputation.
+Lets Plot the values to see their distributions. It will help us to understand the distribution of the data.
+
+**Plotting country of res vs autism**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=austim)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting country of res vs result**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=result)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting country of res vs jaundice**
+
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=jundice)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting country of res vs ethniciry**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=ethnicity)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting country of res vs age**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=age)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting country of res vs gender**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=gender)) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting gender vs Class.ASD**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=gender, y=Class.ASD )) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting age vs Class.ASD**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=age, y=Class.ASD )) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting ethnicity vs Class.ASD**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=ethnicity, y=Class.ASD )) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting contry_of_res vs Class.ASD**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=contry_of_res, y=Class.ASD )) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Plotting jaundice vs Class.ASD**
+```{r}
+library(ggplot2)
+
+geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+# Add the regression line
+ggplot(data, aes(x=jundice, y=Class.ASD )) + 
+  geom_point()+
+  geom_smooth(method=lm)
+
+```
+**Heat map to check correlation**
+
+Compute the correlation matrix
+Correlation matrix can be created using the R function cor() :
+
+```{r}
+cormat <- round(cor(data),2)
+head(cormat)
+```
+```{r}
+library(reshape2)
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+```
+```{r}
+library(ggplot2)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+```
+```{r}
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
+  # Get upper triangle of the correlation matrix
+  get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+  }
+```
+```{r}
+upper_tri <- get_upper_tri(cormat)
+upper_tri
+```
+```{r}
+# Melt the correlation matrix
+library(reshape2)
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Heatmap
+library(ggplot2)
+ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Pearson\nCorrelation") +
+  theme_minimal()+ 
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+```
+**Age Histogram**
+
+To see the distribution of age
+```{r}
+hist(data$age)
+```
+**Logistic Regression**
+
+Logistic regression are the most common models used with binary outcomes.Events are coded as binary variables with a value of 1 representing the occurrence of a target outcome, and a value of zero representing its absence. OLS can also model binary variables using linear probability models.
+
+Now we will split the data into Train & test Set
+
+```{r}
+library(caret)
+library(dplyr)
+
+index <-  createDataPartition(data$Class.ASD,p= .8, times=1, list=F)
+
+train <-  data[index,]
+test <- data[-index,]
+```
+Fitting a logistic regression model:
+
+We will use logistic regression model on the training set which is 80% of the total data.
+
+```{r}
+logistic<- glm(Class.ASD~., data=train, family='binomial')
+
+summary(logistic)
+```
+Pedicting on the Dataset
+
+```{r}
+pred= predict(logistic, test, type='response')
+pred
+
+
+pred = ifelse(pred > 0.40, 1, 0)
+pred= as.factor(pred)
+```
+Checking Accuracy with Confusion Matrix
+
+```{r}
+matrix = confusionMatrix(pred,as.factor(test$Class.ASD))
+matrix
+```
+**Accuracy is 100 percent while we use Logistic regression**
+
+We will now try the classification using Random Forest Classifiers
+
+**Random Forest Classifiers**
+
+Random forest is a machine learning algorithm that uses a collection of decision trees providing more flexibility, accuracy, and ease of access in the output. This algorithm dominates over decision trees algorithm as decision trees provide poor accuracy as compared to the random forest algorithm. In simple words, the random forest approach increases the performance of decision trees. It is one of the best algorithm as it can use both classification and regression techniques. Being a supervised learning algorithm, random forest uses the bagging method in decision trees and as a result, increases the accuracy of the learning model.
+
+```{r echo = T, results = 'hide'}
+library(randomForest)
+require(caTools)
+```
+
+
+```{r}
+dim(data)
+dim(train)
+dim(test)
+
+```
+```{r}
+summary(data)
+
+```
+```{r}
+library(randomForest)
+library(mlbench)
+library(caret)
+
+data$Class.ASD =as.factor(data$Class.ASD)
+
+dataset <- data
+x <- data[,1:8]
+y <- data["Class.ASD"]
+
+```
+
+```{r}
+# Create model with default paramters
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+seed <- 7
+#metric <- "Accuracy"
+set.seed(seed)
+mtry <- sqrt(ncol(x))
+tunegrid <- expand.grid(.mtry=mtry)
+rf_default <- train(Class.ASD~., data=data, method="rf", tuneGrid=tunegrid, trControl=control)
+print(rf_default)
+
+```
+```{r}
+
+# Random Search
+control <- trainControl(method="repeatedcv", number=10, repeats=3, search="random")
+set.seed(seed)
+mtry <- sqrt(ncol(x))
+rf_random <- train(Class.ASD~., data=dataset, method="rf", tuneLength=15, trControl=control)
+print(rf_random)
+plot(rf_random)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
